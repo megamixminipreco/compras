@@ -284,6 +284,17 @@ function App() {
                 </div>
               </div>
 
+              {/* Divisão */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Divisão</label>
+                <select className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white">
+                  <option value="">Selecione uma divisão</option>
+                  <option value="1">DIVISÃO 01</option>
+                  <option value="2">DIVISÃO 02</option>
+                  <option value="3">DIVISÃO 03</option>
+                </select>
+              </div>
+
               {/* Comprador */}
               <div>
                 <label className="block text-sm font-medium mb-2">Comprador *</label>
@@ -314,24 +325,56 @@ function App() {
                 </select>
               </div>
 
-              {/* Data de Entrega */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Data de Entrega</label>
-                <input
-                  type="date"
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
-                />
+              {/* Checkboxes */}
+              <div className="md:col-span-2">
+                <div className="flex gap-6">
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2" />
+                    <span>Gera Sugestão</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2" />
+                    <span>Utiliza Venda Média do Período</span>
+                  </label>
+                </div>
               </div>
 
-              {/* Observações */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Observações</label>
-                <textarea
-                  rows={3}
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400"
-                  placeholder="Digite observações sobre o pedido..."
-                />
+              {/* DDV */}
+              <div>
+                <label className="block text-sm font-medium mb-2">DDV</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input type="radio" name="ddv" value="automatico" className="mr-2" />
+                    <span>Automático</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input type="radio" name="ddv" value="manual" className="mr-2" />
+                    <span>Manual</span>
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="DDV"
+                    className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white"
+                  />
+                </div>
               </div>
+
+              {/* Período */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Período</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    className="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                  />
+                  <span>a</span>
+                  <input
+                    type="date"
+                    className="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
             </div>
 
             <div className="flex justify-center mt-8">
@@ -340,7 +383,10 @@ function App() {
                 disabled={selectedSuppliers.length === 0 || !selectedBuyer || !selectedStore}
                 className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-8 py-3 rounded-lg text-white font-bold text-lg"
               >
-                Gerar Pedido de Compra
+                Gerar
+              </button>
+              <button className="bg-red-600 hover:bg-red-700 px-8 py-3 rounded-lg text-white font-bold text-lg ml-4">
+                Sair
               </button>
             </div>
           </div>
