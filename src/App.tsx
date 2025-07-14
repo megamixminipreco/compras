@@ -159,6 +159,7 @@ function App() {
   const [quantities, setQuantities] = useState<{[key: number]: number}>({});
   const [selectedSupplierForProduct, setSelectedSupplierForProduct] = useState<{[key: number]: number}>({});
   const [orders, setOrders] = useState<OrdersBySupplierId>({});
+  const [prices, setPrices] = useState<{[key: number]: number}>({});
 
   const filteredProducts = mockProducts.filter(product =>
     product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -196,10 +197,10 @@ function App() {
   const handleAddToOrder = (productId: number) => {
     const quantity = quantities[productId];
     const supplierId = selectedSupplierForProduct[productId];
+    const price = prices[productId];
     const product = mockProducts.find(p => p.id === productId);
     
-    if (quantity && supplierId && product) {
-      const price = product.supplierPrices[supplierId]?.price || 0;
+    if (quantity && supplierId && price && product) {
       const total = quantity * price;
       
       const orderItem: OrderItem = {
@@ -218,6 +219,7 @@ function App() {
       // Limpar campos após adicionar
       setQuantities(prev => ({ ...prev, [productId]: 0 }));
       setSelectedSupplierForProduct(prev => ({ ...prev, [productId]: 0 }));
+      setPrices(prev => ({ ...prev, [productId]: 0 }));
     }
   };
 
@@ -226,6 +228,11 @@ function App() {
       ...prev,
       [supplierId]: prev[supplierId]?.filter(item => item.productId !== productId) || []
     }));
+    
+    // Limpar campos quando remover
+    setQuantities(prev => ({ ...prev, [productId]: 0 }));
+    setSelectedSupplierForProduct(prev => ({ ...prev, [productId]: 0 }));
+    setPrices(prev => ({ ...prev, [productId]: 0 }));
   };
 
   const getSupplierTotal = (supplierId: number) => {
@@ -499,15 +506,19 @@ function App() {
                     <th className="px-4 py-3 text-center">Qtd</th>
                     <th className="px-4 py-3 text-center">Fornecedor</th>
                     <th className="px-4 py-3 text-center">Preço</th>
+                    <th className="px-4 py-3 text-center">Preço</th>
                     <th className="px-4 py-3 text-center">Total</th>
                     <th className="px-4 py-3 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map(product => {
+                  {filteredProducts
+                    .filter(product => !Object.values(orders).flat().some(item => item.productId === product.id))
+                    .map(product => {
                     const quantity = quantities[product.id] || 0;
                     const selectedSupplierId = selectedSupplierForProduct[product.id];
-                    const price = selectedSupplierId ? product.supplierPrices[selectedSupplierId]?.price || 0 : 0;
+                    const defaultPrice = selectedSupplierId ? product.supplierPrices[selectedSupplierId]?.price || 0 : 0;
+                    const price = prices[product.id] || defaultPrice;
                     const total = quantity * price;
                     
                     return (
@@ -541,7 +552,16 @@ function App() {
                         <td className="px-4 py-3 text-center">
                           <select
                             value={selectedSupplierId || ''}
-                            onChange={(e) => handleSupplierForProductChange(product.id, Number(e.target.value))}
+                            onChange={(e) => {
+                              const supplierId = Number(e.target.value);
+                              handleSupplierForProductChange(product.id, supplierId);
+                              if (supplierId && product.supplierPrices[supplierId]) {
+                                setPrices(prev => ({
+                                  ...prev,
+                                  [product.id]: product.supplierPrices[supplierId].price
+                                }));
+                              }
+                            }}
                             className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"
                           >
                             <option value="">Selecionar</option>
@@ -556,6 +576,20 @@ function App() {
                                 );
                               })}
                           </select>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={price}
+                            onChange={(e) => setPrices(prev => ({
+                              ...prev,
+                              [product.id]: Number(e.target.value)
+                            }))}
+                            className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-center"
+                            placeholder="0.00"
+                          />
                         </td>
                         <td className="px-4 py-3 text-center font-bold text-green-400">
                           {price > 0 ? `R$ ${price.toFixed(2)}` : '-'}
@@ -577,7 +611,7 @@ function App() {
                             </button>
                             <button
                               onClick={() => handleAddToOrder(product.id)}
-                              disabled={!quantity || !selectedSupplierId}
+                              disabled={!quantity || !selectedSupplierId || !price}
                               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed p-1 rounded"
                               title="Adicionar ao pedido"
                             >
