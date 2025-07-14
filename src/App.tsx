@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Calendar, User, Building2, Package, TrendingUp, BarChart3 } from 'lucide-react';
+import { Search, Filter, Calendar, User, Building2, Package, TrendingUp, BarChart3, ArrowLeft, Save, FileText, Printer, Mail, Settings, RefreshCw, X, Plus, Minus, Edit, Check } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -20,7 +20,30 @@ interface Product {
   codExterno: string;
   margemLiquida: number;
   margemBruta: number;
+  margemSobCusto: number;
+  margemSobVenda: number;
+  margemMinima: number;
+  margemMaxima: number;
+  margemPadrao: number;
   codigoBarras: string;
+}
+
+interface StoreInfo {
+  estoque: number;
+  qtdEntrada: number;
+  custoMedio: number;
+  estoqueMinimo: number;
+  estoqueMaximo: number;
+  ddvMaximo: number;
+  troca: number;
+  loja: string;
+  precoVenda: number;
+  entrada: number;
+  margemLiquida: number;
+  margemBruta: number;
+  estoqueAtual: number;
+  vendaSemana: number;
+  vendaMensal: number;
 }
 
 const mockProducts: Product[] = [
@@ -43,6 +66,11 @@ const mockProducts: Product[] = [
     codExterno: '0000000000001735',
     margemLiquida: 14.73,
     margemBruta: 32.73,
+    margemSobCusto: 87.22,
+    margemSobVenda: 46.59,
+    margemMinima: 0.00,
+    margemMaxima: 0.00,
+    margemPadrao: 42.40,
     codigoBarras: '7500435127257'
   },
   {
@@ -64,11 +92,54 @@ const mockProducts: Product[] = [
     codExterno: '0000000000001863',
     margemLiquida: 17.06,
     margemBruta: 35.06,
+    margemSobCusto: 99.65,
+    margemSobVenda: 49.91,
+    margemMinima: 7.50,
+    margemMaxima: 12.00,
+    margemPadrao: 10.00,
     codigoBarras: '7500435127226'
   }
 ];
 
+const mockStoreInfo: StoreInfo[] = [
+  {
+    estoque: 10.79,
+    qtdEntrada: 0,
+    custoMedio: 0.03,
+    estoqueMinimo: 0,
+    estoqueMaximo: 0,
+    ddvMaximo: 0,
+    troca: 0,
+    loja: 'MECAMIX',
+    precoVenda: 6.150,
+    entrada: 0,
+    margemLiquida: 7.69,
+    margemBruta: 76.60,
+    estoqueAtual: 12.000,
+    vendaSemana: 25.69,
+    vendaMensal: 8
+  },
+  {
+    estoque: 10.79,
+    qtdEntrada: 0,
+    custoMedio: 0.06,
+    estoqueMinimo: 0,
+    estoqueMaximo: 0,
+    ddvMaximo: 0,
+    troca: 0,
+    loja: 'MINI PREÇO',
+    precoVenda: 6.060,
+    entrada: 0,
+    margemLiquida: 7.69,
+    margemBruta: 76.60,
+    estoqueAtual: 12.000,
+    vendaSemana: 25.69,
+    vendaMensal: 2
+  }
+];
+
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<'selection' | 'purchase'>('selection');
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [selectedDivision, setSelectedDivision] = useState('');
   const [selectedBuyer, setSelectedBuyer] = useState('');
@@ -78,46 +149,35 @@ export default function App() {
   const [ddvType, setDdvType] = useState('automatic');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [miniPreco, setMiniPreco] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-8 h-8 text-blue-600" />
-            Sistema de Compras Multi-Fornecedor
-          </h1>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Formulário de Seleção */}
-        <div className="bg-white rounded-lg shadow-sm border mb-6">
-          <div className="px-6 py-4 border-b bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Seleção de Fornecedor e Parâmetros
-            </h2>
-          </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  // Tela de Seleção de Parâmetros
+  if (currentScreen === 'selection') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="max-w-2xl mx-auto py-8">
+          <div className="bg-white rounded-lg shadow-lg border">
+            {/* Header */}
+            <div className="px-6 py-4 border-b bg-blue-50">
+              <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Filter className="w-6 h-6 text-blue-600" />
+                Inclusão de Pedido Compra
+              </h1>
+            </div>
+            
+            <div className="p-6 space-y-6">
               {/* Fornecedor */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Building2 className="w-4 h-4 inline mr-1" />
-                  Fornecedor
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fornecedor</label>
                 <div className="flex">
                   <input
                     type="text"
                     value={selectedSupplier}
                     onChange={(e) => setSelectedSupplier(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Selecione o fornecedor"
+                    placeholder=""
                   />
-                  <button className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
                     <Search className="w-4 h-4" />
                   </button>
                 </div>
@@ -131,7 +191,7 @@ export default function App() {
                   onChange={(e) => setSelectedDivision(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Selecione...</option>
+                  <option value=""></option>
                   <option value="1">Divisão 1</option>
                   <option value="2">Divisão 2</option>
                 </select>
@@ -139,19 +199,16 @@ export default function App() {
 
               {/* Comprador */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="w-4 h-4 inline mr-1" />
-                  Comprador
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Comprador</label>
                 <div className="flex">
                   <input
                     type="text"
                     value={selectedBuyer}
                     onChange={(e) => setSelectedBuyer(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Selecione o comprador"
+                    placeholder=""
                   />
-                  <button className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
                     <Search className="w-4 h-4" />
                   </button>
                 </div>
@@ -166,156 +223,264 @@ export default function App() {
                     onChange={(e) => setSelectedStore(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Selecione...</option>
+                    <option value=""></option>
                     <option value="1">Loja 1</option>
                     <option value="2">Loja 2</option>
                   </select>
                   <label className="flex items-center">
-                    <input type="checkbox" className="mr-2" />
+                    <input 
+                      type="checkbox" 
+                      checked={miniPreco}
+                      onChange={(e) => setMiniPreco(e.target.checked)}
+                      className="mr-2" 
+                    />
                     <span className="text-sm text-gray-600">MINI PREÇO</span>
                   </label>
                 </div>
               </div>
-            </div>
 
-            {/* Opções e Período */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Opções */}
+              <div className="grid grid-cols-2 gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={generateSuggestion}
+                    onChange={(e) => setGenerateSuggestion(e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-600">Gera Sugestão</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={useAverageSales}
+                    onChange={(e) => setUseAverageSales(e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-600">Utiliza Venda Média do Período</span>
+                </label>
+              </div>
+
+              {/* DDV */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Opções</h3>
-                <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">DDV</label>
+                <div className="flex gap-4 mb-2">
                   <label className="flex items-center">
                     <input
-                      type="checkbox"
-                      checked={generateSuggestion}
-                      onChange={(e) => setGenerateSuggestion(e.target.checked)}
+                      type="radio"
+                      name="ddv"
+                      value="automatic"
+                      checked={ddvType === 'automatic'}
+                      onChange={(e) => setDdvType(e.target.value)}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-600">Gera Sugestão</span>
+                    <span className="text-sm text-gray-600">Automático</span>
                   </label>
                   <label className="flex items-center">
                     <input
-                      type="checkbox"
-                      checked={useAverageSales}
-                      onChange={(e) => setUseAverageSales(e.target.checked)}
+                      type="radio"
+                      name="ddv"
+                      value="manual"
+                      checked={ddvType === 'manual'}
+                      onChange={(e) => setDdvType(e.target.value)}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-600">Utiliza Venda Média do Período</span>
+                    <span className="text-sm text-gray-600">Manual</span>
                   </label>
+                </div>
+                {ddvType === 'manual' && (
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Dias"
+                  />
+                )}
+              </div>
+
+              {/* Período */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-500">a</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
 
-              {/* DDV e Período */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  DDV e Período
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="ddv"
-                        value="automatic"
-                        checked={ddvType === 'automatic'}
-                        onChange={(e) => setDdvType(e.target.value)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-600">Automático</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="ddv"
-                        value="manual"
-                        checked={ddvType === 'manual'}
-                        onChange={(e) => setDdvType(e.target.value)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-600">Manual</span>
-                    </label>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-gray-500">a</span>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
+              {/* Botões */}
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={() => setCurrentScreen('purchase')}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Gerar
+                </button>
+                <button className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2">
+                  <X className="w-4 h-4" />
+                  Sair
+                </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            {/* Botões de Ação */}
-            <div className="flex gap-3 mt-6">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
-                <Search className="w-4 h-4" />
-                Gerar Pedido
+  // Tela Principal de Pedido de Compra
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Toolbar Superior */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-full mx-auto px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setCurrentScreen('selection')}
+                className="p-2 hover:bg-gray-100 rounded-md"
+                title="Voltar"
+              >
+                <ArrowLeft className="w-5 h-5" />
               </button>
-              <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                Sair
+              <h1 className="text-lg font-bold text-gray-900">Pedido de Compra</h1>
+            </div>
+            
+            {/* Toolbar Buttons */}
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-md" title="Novo">
+                <Plus className="w-5 h-5" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-md" title="Salvar">
+                <Save className="w-5 h-5" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-md" title="Imprimir">
+                <Printer className="w-5 h-5" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-md" title="Email">
+                <Mail className="w-5 h-5" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-md" title="Atualizar">
+                <RefreshCw className="w-5 h-5" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-md" title="Filtro">
+                <Filter className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Tabela de Produtos */}
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="px-6 py-4 border-b bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Produtos para Compra
-            </h2>
-          </div>
-          
+      {/* Informações do Pedido */}
+      <div className="bg-white border-b px-4 py-3">
+        <div className="grid grid-cols-6 gap-4 text-sm">
+          <div><strong>Loja Padrão:</strong> {selectedStore || 'MECAMIX'}</div>
+          <div><strong>Nº Pedido:</strong> </div>
+          <div><strong>Fornecedor:</strong> {selectedSupplier || 'DISTRIBUIDORA DISTRIBUIDORA SA'}</div>
+          <div><strong>Estado:</strong> </div>
+          <div><strong>Comprador:</strong> {selectedBuyer}</div>
+          <div><strong>Divisão:</strong> {selectedDivision}</div>
+        </div>
+        <div className="grid grid-cols-6 gap-4 text-sm mt-2">
+          <div><strong>Tipo Frete:</strong> CIF (PAGO)</div>
+          <div><strong>Valor Frete:</strong> </div>
+          <div><strong>Usa Destino:</strong> </div>
+          <div><strong>Pedido Min. Valor:</strong> Vr Desconto</div>
+          <div><strong>Data Compra:</strong> 12/07/2025</div>
+          <div><strong>Situação:</strong> DIGITANDO</div>
+        </div>
+        <div className="grid grid-cols-6 gap-4 text-sm mt-2">
+          <div><strong>Produtos:</strong> </div>
+          <div><strong>Descrição:</strong> </div>
+          <div><strong>Quantidade:</strong> </div>
+          <div><strong>Qtd Bonificada:</strong> </div>
+          <div><strong>Valor Venda:</strong> </div>
+          <div><strong>% Venda:</strong> </div>
+        </div>
+      </div>
+
+      <div className="max-w-full mx-auto px-4 py-4">
+        {/* Tabela Principal de Produtos */}
+        <div className="bg-white rounded-lg shadow-sm border mb-4">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="px-3 py-3 text-left font-medium text-gray-700">Produto</th>
-                  <th className="px-3 py-3 text-left font-medium text-gray-700">Descrição</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Qtd</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Qtd Bonif.</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Valor Venda</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">% Venda</th>
-                  <th className="px-3 py-3 text-left font-medium text-gray-700">Embalagem</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Custo Compra</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Custo Final</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Valor Total</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Mrg. Líq.</th>
-                  <th className="px-3 py-3 text-right font-medium text-gray-700">Mrg. Bruta</th>
-                  <th className="px-3 py-3 text-left font-medium text-gray-700">Cód. Barras</th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-700">Produtos</th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-700">Descrição</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Quantidade</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Qtd Bonificada</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Valor Venda</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">% Venda</th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-700">Embalagem</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Custo Compra</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Custo Venda</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Custo Final</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Desconto</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Valor Final</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Valor Total</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Qtd Atendida</th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-700">Cód Externo</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Líq.</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Bruta</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Sb. Custo</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Sb. Venda</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Mínima</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Máxima</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-700">Mrg. Padrão</th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-700">Código Barras</th>
                 </tr>
               </thead>
               <tbody>
-                {mockProducts.map((product) => (
-                  <tr key={product.id} className="border-b hover:bg-gray-50">
-                    <td className="px-3 py-3 font-mono text-blue-600">{product.codigo}</td>
-                    <td className="px-3 py-3 max-w-xs truncate">{product.descricao}</td>
-                    <td className="px-3 py-3 text-right">{product.quantidade}</td>
-                    <td className="px-3 py-3 text-right">{product.qtdBonificada}</td>
-                    <td className="px-3 py-3 text-right">R$ {product.valorVenda.toFixed(2)}</td>
-                    <td className="px-3 py-3 text-right">{product.percentualVenda.toFixed(2)}%</td>
-                    <td className="px-3 py-3">{product.embalagem}</td>
-                    <td className="px-3 py-3 text-right">R$ {product.custoCompra.toFixed(2)}</td>
-                    <td className="px-3 py-3 text-right">R$ {product.custoFinal.toFixed(2)}</td>
-                    <td className="px-3 py-3 text-right">R$ {product.valorTotal.toFixed(2)}</td>
-                    <td className={`px-3 py-3 text-right font-medium ${product.margemLiquida > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {mockProducts.map((product, index) => (
+                  <tr key={product.id} className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <td className="px-2 py-2 font-mono text-blue-600">{product.codigo}</td>
+                    <td className="px-2 py-2 max-w-xs truncate">{product.descricao}</td>
+                    <td className="px-2 py-2 text-right">{product.quantidade}</td>
+                    <td className="px-2 py-2 text-right">{product.qtdBonificada}</td>
+                    <td className="px-2 py-2 text-right">R$ {product.valorVenda.toFixed(2)}</td>
+                    <td className="px-2 py-2 text-right">{product.percentualVenda.toFixed(2)}%</td>
+                    <td className="px-2 py-2">{product.embalagem}</td>
+                    <td className="px-2 py-2 text-right">R$ {product.custoCompra.toFixed(2)}</td>
+                    <td className="px-2 py-2 text-right">R$ {product.custoVenda.toFixed(2)}</td>
+                    <td className="px-2 py-2 text-right">R$ {product.custoFinal.toFixed(2)}</td>
+                    <td className="px-2 py-2 text-right">{product.desconto.toFixed(2)}%</td>
+                    <td className="px-2 py-2 text-right">R$ {product.valorFinal.toFixed(2)}</td>
+                    <td className="px-2 py-2 text-right">R$ {product.valorTotal.toFixed(2)}</td>
+                    <td className="px-2 py-2 text-right">{product.qtdAtendida}</td>
+                    <td className="px-2 py-2 font-mono text-gray-600">{product.codExterno}</td>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemLiquida > 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {product.margemLiquida.toFixed(2)}%
                     </td>
-                    <td className={`px-3 py-3 text-right font-medium ${product.margemBruta > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemBruta > 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {product.margemBruta.toFixed(2)}%
                     </td>
-                    <td className="px-3 py-3 font-mono text-gray-600">{product.codigoBarras}</td>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemSobCusto > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.margemSobCusto.toFixed(2)}%
+                    </td>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemSobVenda > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.margemSobVenda.toFixed(2)}%
+                    </td>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemMinima > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.margemMinima.toFixed(2)}%
+                    </td>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemMaxima > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.margemMaxima.toFixed(2)}%
+                    </td>
+                    <td className={`px-2 py-2 text-right font-medium ${product.margemPadrao > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.margemPadrao.toFixed(2)}%
+                    </td>
+                    <td className="px-2 py-2 font-mono text-gray-600">{product.codigoBarras}</td>
                   </tr>
                 ))}
               </tbody>
@@ -323,67 +488,119 @@ export default function App() {
           </div>
         </div>
 
-        {/* Painéis de Informação */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Painel Estoque */}
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="px-6 py-4 border-b bg-blue-50">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-                Informações de Estoque
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Estoque Atual:</span>
-                  <span className="ml-2 font-medium">0</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Estoque Mínimo:</span>
-                  <span className="ml-2 font-medium">0</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Estoque Máximo:</span>
-                  <span className="ml-2 font-medium">0</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">DDV Máximo:</span>
-                  <span className="ml-2 font-medium">0</span>
-                </div>
-              </div>
+        {/* Painel Inferior com Abas */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          {/* Abas */}
+          <div className="border-b">
+            <div className="flex">
+              <button className="px-4 py-2 border-b-2 border-blue-500 text-blue-600 font-medium">
+                Estoque
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Informações
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Totais
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Histórico Compra
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Venda/Mês
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Venda/Semana
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Venda Associada
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Entrada
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Bonificação
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Transferência
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Oferta
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Vendas
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Similares
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Observação
+              </button>
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Histórico Oferta
+              </button>
             </div>
           </div>
 
-          {/* Painel Vendas */}
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="px-6 py-4 border-b bg-green-50">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-                Informações de Vendas
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Custo Médio:</span>
-                  <span className="ml-2 font-medium">R$ 0,00</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Total:</span>
-                  <span className="ml-2 font-medium">R$ 0,00</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Mrg. Líquida:</span>
-                  <span className="ml-2 font-medium text-green-600">0,00%</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Entrada:</span>
-                  <span className="ml-2 font-medium">0</span>
-                </div>
-              </div>
+          {/* Conteúdo da Aba Estoque */}
+          <div className="p-4">
+            <div className="grid grid-cols-12 gap-2 text-xs">
+              {/* Headers */}
+              <div className="font-medium text-gray-700">ADMINISTRATIVO</div>
+              <div className="font-medium text-gray-700">ESTOQUE</div>
+              <div className="font-medium text-gray-700">ENTRADA</div>
+              <div className="font-medium text-gray-700">VENDA/SEMANA</div>
+              <div className="font-medium text-gray-700">ESTOQUE/ADMINISTRATIVO</div>
+              <div className="font-medium text-gray-700">VENDA/SEMANA</div>
+              <div className="font-medium text-gray-700">ESTOQUE</div>
+              <div className="font-medium text-gray-700">COMPRA</div>
+              <div className="font-medium text-gray-700">ESTOQUE</div>
+              <div className="font-medium text-gray-700">ADMINISTRATIVO</div>
+              <div className="font-medium text-gray-700">ESTOQUE</div>
+              <div className="font-medium text-gray-700">ADMINISTRATIVO</div>
+
+              {/* Subheaders */}
+              <div className="text-gray-600">Preço Venda</div>
+              <div className="text-gray-600">Entrada</div>
+              <div className="text-gray-600">Qtd. Reposição</div>
+              <div className="text-gray-600">Média Venda</div>
+              <div className="text-gray-600">Estoque Mínimo</div>
+              <div className="text-gray-600">DDV Máximo</div>
+              <div className="text-gray-600">Troca</div>
+              <div className="text-gray-600">Loja</div>
+              <div className="text-gray-600">Custo Médio</div>
+              <div className="text-gray-600">% Imposto</div>
+              <div className="text-gray-600">28/06 A 04/07</div>
+              <div className="text-gray-600">Total</div>
+
+              {/* Dados das lojas */}
+              {mockStoreInfo.map((store, index) => (
+                <React.Fragment key={index}>
+                  <div className="py-1">{store.precoVenda.toFixed(3)}</div>
+                  <div className="py-1">{store.entrada}</div>
+                  <div className="py-1">{store.qtdEntrada.toFixed(2)}</div>
+                  <div className="py-1">{store.estoqueMinimo}</div>
+                  <div className="py-1">{store.estoqueMaximo}</div>
+                  <div className="py-1">{store.ddvMaximo.toFixed(3)} {store.loja}</div>
+                  <div className="py-1">{store.troca.toFixed(3)}</div>
+                  <div className="py-1">{store.entrada}</div>
+                  <div className="py-1">{store.margemLiquida.toFixed(2)}%</div>
+                  <div className="py-1">{store.margemBruta.toFixed(2)}%</div>
+                  <div className="py-1">{store.estoqueAtual.toFixed(3)}</div>
+                  <div className="py-1">{store.vendaSemana.toFixed(2)}%</div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Status Bar */}
+      <div className="bg-gray-200 border-t px-4 py-2 text-xs text-gray-600">
+        <div className="flex justify-between">
+          <span>MARCOS OLIVEIRA</span>
+          <span>SUPERMERCADO MINI PREÇO</span>
+          <span>VR MASTER 4.2.40-11</span>
+          <span>12/07/2025</span>
         </div>
       </div>
     </div>
