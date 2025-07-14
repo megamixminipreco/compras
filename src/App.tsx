@@ -1,6 +1,29 @@
 import React, { useState } from 'react';
 import { Search, Filter, Calendar, User, Building2, Package, TrendingUp, BarChart3, ArrowLeft, Save, FileText, Printer, Mail, Settings, RefreshCw, X, Plus, Minus, Edit, Check } from 'lucide-react';
 
+// Fornecedores fake para teste
+const mockSuppliers = [
+  { id: 1, codigo: '001', nome: 'DISTRIBUIDORA DISTRIBUIDORA SA', cnpj: '12.345.678/0001-90', cidade: 'São Paulo' },
+  { id: 2, codigo: '002', nome: 'ATACADÃO DISTRIBUIÇÃO LTDA', cnpj: '98.765.432/0001-10', cidade: 'Rio de Janeiro' },
+  { id: 3, codigo: '003', nome: 'MEGA FORNECEDOR ALIMENTOS', cnpj: '11.222.333/0001-44', cidade: 'Belo Horizonte' },
+  { id: 4, codigo: '004', nome: 'CENTRAL DE ABASTECIMENTO', cnpj: '55.666.777/0001-88', cidade: 'Salvador' },
+  { id: 5, codigo: '005', nome: 'DISTRIBUIDORA NORDESTE', cnpj: '33.444.555/0001-22', cidade: 'Recife' },
+  { id: 6, codigo: '006', nome: 'SUL DISTRIBUIÇÃO', cnpj: '77.888.999/0001-66', cidade: 'Porto Alegre' },
+];
+
+const mockBuyers = [
+  { id: 1, nome: 'JOÃO SILVA' },
+  { id: 2, nome: 'MARIA SANTOS' },
+  { id: 3, nome: 'PEDRO OLIVEIRA' },
+  { id: 4, nome: 'ANA COSTA' },
+];
+
+const mockStores = [
+  { id: 1, nome: 'MECAMIX - MATRIZ' },
+  { id: 2, nome: 'MINI PREÇO - FILIAL 01' },
+  { id: 3, nome: 'SUPER CENTER - FILIAL 02' },
+];
+
 interface Product {
   id: string;
   codigo: string;
@@ -140,7 +163,7 @@ const mockStoreInfo: StoreInfo[] = [
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<'selection' | 'purchase'>('selection');
-  const [selectedSupplier, setSelectedSupplier] = useState('');
+  const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>([]);
   const [selectedDivision, setSelectedDivision] = useState('');
   const [selectedBuyer, setSelectedBuyer] = useState('');
   const [selectedStore, setSelectedStore] = useState('');
@@ -150,6 +173,138 @@ export default function App() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [miniPreco, setMiniPreco] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [showBuyerModal, setShowBuyerModal] = useState(false);
+
+  const handleSupplierToggle = (supplierId: number) => {
+    setSelectedSuppliers(prev => 
+      prev.includes(supplierId) 
+        ? prev.filter(id => id !== supplierId)
+        : [...prev, supplierId]
+    );
+  };
+
+  const getSelectedSuppliersText = () => {
+    if (selectedSuppliers.length === 0) return '';
+    if (selectedSuppliers.length === 1) {
+      const supplier = mockSuppliers.find(s => s.id === selectedSuppliers[0]);
+      return supplier ? `${supplier.codigo} - ${supplier.nome}` : '';
+    }
+    return `${selectedSuppliers.length} fornecedores selecionados`;
+  };
+
+  // Modal de Seleção de Fornecedores
+  const SupplierModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div className="px-6 py-4 border-b bg-blue-50 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-900">Selecionar Fornecedores</h2>
+          <button 
+            onClick={() => setShowSupplierModal(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-96">
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Buscar fornecedor..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            {mockSuppliers.map(supplier => (
+              <label key={supplier.id} className="flex items-center p-3 hover:bg-gray-50 rounded-md cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedSuppliers.includes(supplier.id)}
+                  onChange={() => handleSupplierToggle(supplier.id)}
+                  className="mr-3"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">
+                    {supplier.codigo} - {supplier.nome}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    CNPJ: {supplier.cnpj} | {supplier.cidade}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+        
+        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+          <button 
+            onClick={() => setShowSupplierModal(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancelar
+          </button>
+          <button 
+            onClick={() => setShowSupplierModal(false)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Confirmar ({selectedSuppliers.length})
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Modal de Seleção de Compradores
+  const BuyerModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+        <div className="px-6 py-4 border-b bg-blue-50 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-900">Selecionar Comprador</h2>
+          <button 
+            onClick={() => setShowBuyerModal(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="p-6">
+          <div className="space-y-2">
+            {mockBuyers.map(buyer => (
+              <label key={buyer.id} className="flex items-center p-3 hover:bg-gray-50 rounded-md cursor-pointer">
+                <input
+                  type="radio"
+                  name="buyer"
+                  value={buyer.id}
+                  checked={selectedBuyer === buyer.nome}
+                  onChange={() => setSelectedBuyer(buyer.nome)}
+                  className="mr-3"
+                />
+                <div className="font-medium text-gray-900">{buyer.nome}</div>
+              </label>
+            ))}
+          </div>
+        </div>
+        
+        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+          <button 
+            onClick={() => setShowBuyerModal(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancelar
+          </button>
+          <button 
+            onClick={() => setShowBuyerModal(false)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   // Tela de Seleção de Parâmetros
   if (currentScreen === 'selection') {
@@ -168,16 +323,23 @@ export default function App() {
             <div className="p-6 space-y-6">
               {/* Fornecedor */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fornecedor</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fornecedor {selectedSuppliers.length > 0 && (
+                    <span className="text-blue-600">({selectedSuppliers.length} selecionado{selectedSuppliers.length > 1 ? 's' : ''})</span>
+                  )}
+                </label>
                 <div className="flex">
                   <input
                     type="text"
-                    value={selectedSupplier}
-                    onChange={(e) => setSelectedSupplier(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder=""
+                    value={getSelectedSuppliersText()}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                    placeholder="Clique em buscar para selecionar fornecedores..."
                   />
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+                  <button 
+                    onClick={() => setShowSupplierModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+                  >
                     <Search className="w-4 h-4" />
                   </button>
                 </div>
@@ -192,8 +354,10 @@ export default function App() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value=""></option>
-                  <option value="1">Divisão 1</option>
-                  <option value="2">Divisão 2</option>
+                  <option value="1">MERCEARIA</option>
+                  <option value="2">PERECÍVEIS</option>
+                  <option value="3">LIMPEZA</option>
+                  <option value="4">HIGIENE</option>
                 </select>
               </div>
 
@@ -204,11 +368,14 @@ export default function App() {
                   <input
                     type="text"
                     value={selectedBuyer}
-                    onChange={(e) => setSelectedBuyer(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder=""
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                    placeholder="Clique em buscar para selecionar comprador..."
                   />
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+                  <button 
+                    onClick={() => setShowBuyerModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+                  >
                     <Search className="w-4 h-4" />
                   </button>
                 </div>
@@ -224,8 +391,9 @@ export default function App() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value=""></option>
-                    <option value="1">Loja 1</option>
-                    <option value="2">Loja 2</option>
+                    {mockStores.map(store => (
+                      <option key={store.id} value={store.nome}>{store.nome}</option>
+                    ))}
                   </select>
                   <label className="flex items-center">
                     <input 
@@ -321,7 +489,8 @@ export default function App() {
               <div className="flex gap-3 pt-4">
                 <button 
                   onClick={() => setCurrentScreen('purchase')}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                  disabled={selectedSuppliers.length === 0}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <Settings className="w-4 h-4" />
                   Gerar
@@ -334,6 +503,10 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Modais */}
+        {showSupplierModal && <SupplierModal />}
+        {showBuyerModal && <BuyerModal />}
       </div>
     );
   }
@@ -386,7 +559,7 @@ export default function App() {
         <div className="grid grid-cols-6 gap-4 text-sm">
           <div><strong>Loja Padrão:</strong> {selectedStore || 'MECAMIX'}</div>
           <div><strong>Nº Pedido:</strong> </div>
-          <div><strong>Fornecedor:</strong> {selectedSupplier || 'DISTRIBUIDORA DISTRIBUIDORA SA'}</div>
+          <div><strong>Fornecedores:</strong> {selectedSuppliers.length} selecionado{selectedSuppliers.length > 1 ? 's' : ''}</div>
           <div><strong>Estado:</strong> </div>
           <div><strong>Comprador:</strong> {selectedBuyer}</div>
           <div><strong>Divisão:</strong> {selectedDivision}</div>
@@ -398,14 +571,6 @@ export default function App() {
           <div><strong>Pedido Min. Valor:</strong> Vr Desconto</div>
           <div><strong>Data Compra:</strong> 12/07/2025</div>
           <div><strong>Situação:</strong> DIGITANDO</div>
-        </div>
-        <div className="grid grid-cols-6 gap-4 text-sm mt-2">
-          <div><strong>Produtos:</strong> </div>
-          <div><strong>Descrição:</strong> </div>
-          <div><strong>Quantidade:</strong> </div>
-          <div><strong>Qtd Bonificada:</strong> </div>
-          <div><strong>Valor Venda:</strong> </div>
-          <div><strong>% Venda:</strong> </div>
         </div>
       </div>
 
